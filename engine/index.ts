@@ -1,6 +1,7 @@
-import { generateKey } from 'crypto';
 import { gk, sk } from '../consts';
-import {Engine, Mouse} from '../types';
+import {Engine, Mouse, PHASE} from '../types';
+import { Entity } from './Entity';
+import { Component } from './Component';
 
 let engine: Engine;
 
@@ -12,6 +13,7 @@ export function init(canvas: HTMLCanvasElement) {
         fps: 0,
         fpsCounter: 0,
         fpsTime: 0,
+        entities: new Set<Entity>(),
         canvas: canvas,
         ctx: canvas.getContext('2d') as CanvasRenderingContext2D,
         width: 0,
@@ -55,6 +57,7 @@ export function setup() {
 
     // Engine metrics
     engine.deltaTime = now - engine.lastFrameTime;
+    engine.delta = engine.deltaTime / 1000;
     engine.lastFrameTime = now;
     engine.time += engine.deltaTime;
     engine.fpsTime += engine.deltaTime;
@@ -69,7 +72,15 @@ export function setup() {
 
 
 export function update() {
-
+    engine.entities.forEach(entity => {
+        if (entity.active) {
+            entity.components.forEach((component: Component) => {
+                if (component.active && component.phase === PHASE.UPDATE) {
+                    component.update(entity.transform, engine);
+                }
+            });
+        }
+    });
 }
 
 export function physicsUpdate() {
@@ -87,7 +98,7 @@ export function cleanup() {
 }
 
 export function draw() {
-    const { width, height, mouse, keyboard } = engine;
+    const { deltaTime, width, height, mouse, keyboard } = engine;
 
     engine.ctx.clearRect(0, 0, width, height);
     
@@ -99,11 +110,25 @@ export function draw() {
     // Draw mouse position
     if (gk('DEBUG')) {
         engine.ctx.fillText(`x: ${mouse.x} y: ${mouse.y} down: ${mouse.down} up: ${mouse.up} pressed: ${mouse.pressed} released: ${mouse.released} wheel: ${mouse.wheel}`, 10, 60);
-        engine.ctx.fillText(`Debug: ${gk('DEBUG')}`, 300, 30);
 
         engine.ctx.fillText(`Down: ${Array.from(keyboard.down).join(' ')}`, 10, 90);
         engine.ctx.fillText(`Up: ${Array.from(keyboard.up).join(' ')}`, 10, 120);
+
+        // engine.ctx.fillText(`deltaTime: ${deltaTime}`, 100, 30);
+       
     }
+
+    // Draw Entities
+    engine.entities.forEach(entity => {
+        if (entity.active) {
+            entity.components.forEach((component: Component) => {
+                if (component.active && component.phase === PHASE.DRAW) {
+                    component.update(entity.transform, engine);
+                }
+            });
+        }
+    });
+
 }
 
 
@@ -145,15 +170,18 @@ export function addKeyUp(key: string) {
     }
 }
 
+export function addEntity(entity : Entity) {
+    engine.entities.add(entity);
+}
+
 
 // #region Event Listeners
 function setListeners() {
     document.addEventListener('keyup', ({ key }) => {
-        if (key === 'F10') {
-            console.log('swap');
+        if (key === '`') {
             sk('DEBUG', !gk('DEBUG'));
         }
     });
 }
 
-// #endregion
+// #endRegion

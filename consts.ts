@@ -1,4 +1,4 @@
-let debug = true;
+let debug = false;
 
 
 export function gk(key: string) {

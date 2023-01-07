@@ -2,13 +2,21 @@ import Head from 'next/head'
 
 import { useEffect, useRef } from 'react'
 
-import {init, step, resize, mouseUpdate, addKeyUp, addKeyDown} from '../engine/index';
+import {init, step, resize, mouseUpdate, addKeyUp, addKeyDown, addEntity} from '../engine/index';
+import { TestEntity1 } from './../domain/TestEntity1';
+
+let singletoned = false;
 
 export default function Home() {
   const canvasRef = useRef(null);
 
-  console.log('d');
   useEffect(() => {
+    if (singletoned) {
+      return;
+    }
+
+    singletoned = true;
+
     const render = () => {
       step();
 
@@ -51,7 +59,6 @@ export default function Home() {
       addKeyUp(e.key);
     });
 
-    console.log('registering keydown')
     document.addEventListener('keydown', (e) => {
       addKeyDown(e.key);
     });
@@ -62,6 +69,9 @@ export default function Home() {
 
     render();
     // setup game?
+
+
+    addEntity(new TestEntity1('Manolo'));
   });
 
 
