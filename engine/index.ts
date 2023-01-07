@@ -9,6 +9,7 @@ export function init(canvas: HTMLCanvasElement) {
     engine = {
         lastFrameTime: 0,
         deltaTime: 0,
+        delta: 0,
         time: 0,
         fps: 0,
         fpsCounter: 0,
