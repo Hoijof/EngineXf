@@ -115,8 +115,7 @@ export function draw() {
         engine.ctx.fillText(`Down: ${Array.from(keyboard.down).join(' ')}`, 10, 90);
         engine.ctx.fillText(`Up: ${Array.from(keyboard.up).join(' ')}`, 10, 120);
 
-        // engine.ctx.fillText(`deltaTime: ${deltaTime}`, 100, 30);
-       
+        engine.ctx.fillText(`width: ${width} height: ${height}`, 100, 30);       
     }
 
     // Draw Entities

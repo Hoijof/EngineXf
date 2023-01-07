@@ -3,6 +3,7 @@ import Head from 'next/head'
 import { useEffect, useRef } from 'react'
 
 import {init, step, resize, mouseUpdate, addKeyUp, addKeyDown, addEntity} from '../engine/index';
+import { Engine } from '../types';
 import { TestEntity1 } from './../domain/TestEntity1';
 
 let singletoned = false;
@@ -23,7 +24,7 @@ export default function Home() {
       requestAnimationFrame(render);
     }
 
-    // Init
+    // #region Setup events
     document.addEventListener('resize', () => {
       const canvas = canvasRef.current as unknown as HTMLCanvasElement;
 
@@ -63,6 +64,7 @@ export default function Home() {
       addKeyDown(e.key);
     });
 
+    // #endregion
     // Setup engine
 
     init(canvasRef.current as unknown as HTMLCanvasElement);
@@ -71,10 +73,25 @@ export default function Home() {
     // setup game?
 
 
-    addEntity(new TestEntity1('Manolo'));
+    addEntity(new TestEntity1({ name: 'Manolo'}));
   });
 
+  const addRandomEntity = () => {
+    const x = Math.random() * 1000;
+    const y = Math.random() * 1000;
 
+    const position = new DOMPoint(x, y);
+    const speed = new DOMPoint(getRandomFloat(-50, 50), getRandomFloat(-50, 50));
+    addEntity(new TestEntity1({name: 'manolo', transform: {position}, physicsComponent: {speed}}));
+  }
+
+  const addRandomEntityTimes = (times: number) => {
+    return () => {
+      for (let i = 0; i < times; i++) {
+        addRandomEntity();
+      }
+    }
+  }
   return (
     <>
       <Head>
@@ -87,7 +104,19 @@ export default function Home() {
         <div >
           <canvas id='mainCanvas' ref={canvasRef} />
         </div>
+        <div style={{position: "fixed", top: 0, left: 0, zIndex: 1000}}>
+          <button onClick={addRandomEntity}>Add entity</button>
+          <button onClick={addRandomEntityTimes(10)}>Add entity x10</button>
+          <button onClick={addRandomEntityTimes(100)}>Add entity x100</button>
+          <button onClick={addRandomEntityTimes(1000)}>Add entity x1000</button>
+        </div>
       </main>
     </>
   )
+}
+
+
+// Get random float between min and max
+export const getRandomFloat = (min: number, max: number) => {
+  return Math.random() * (max - min) + min;
 }
