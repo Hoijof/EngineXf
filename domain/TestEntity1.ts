@@ -1,3 +1,4 @@
+import { InteractionComponent } from "../engine/components/InteractionComponent";
 import { PhysicsComponent } from "../engine/components/PhysicsComponent";
 import { Entity } from "../engine/Entity";
 import { Transform } from "../engine/Transform";
@@ -18,5 +19,9 @@ export class TestEntity1 extends Entity {
         })); 
 
         this.addComponent(new RenderComponent({ color: "random", shape: "circle"}));
+
+        this.addComponent(new InteractionComponent((other: Entity) => {
+            console.log("TestEntity1 collided with", other);
+        }));
     }
 }

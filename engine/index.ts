@@ -164,6 +164,7 @@ export function draw() {
     ctx.fillText(fps.toString(), 10, 30);
 }
 
+// #region Listeners
 export function resize(width: number, height: number) {
     engine.width = width;
     engine.height = height;
@@ -199,7 +200,7 @@ export function addKeyUp(key: string) {
         keyboard.released.add(key);
     }
 }
-
+// #endregion
 // #region Touch
 function handleStart(evt: TouchEvent) {
     evt.preventDefault();
@@ -284,7 +285,7 @@ export function clearEntities() {
 }
 
 
-// #region Event Listeners
+// #region Setup
 function setListeners() {
     document.addEventListener('keyup', ({ key }) => {
         if (key === '`' || key === 'z') {

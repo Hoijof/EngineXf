@@ -8,14 +8,16 @@ export class PhysicsComponent extends Component {
 
     speed = new DOMPoint(0, 0);
     acceleration = new DOMPoint(0, 0);
+    isStatic = false;
     mass = 1;
     friction = 0;
     bounce = 1;
 
-    constructor({speed = new DOMPoint(0, 0), acceleration = new DOMPoint(0, 0), mass = 1, gravity = 0, friction = 0, bounce = 1} : {speed?: DOMPoint, acceleration?: DOMPoint, mass?: number, gravity?: number, friction?: number, bounce?: number} = {}) {
+    constructor({speed = new DOMPoint(0, 0), acceleration = new DOMPoint(0, 0), isStatic=false, mass = 1, gravity = 0, friction = 0, bounce = 1} : {speed?: DOMPoint, acceleration?: DOMPoint, isStatic?: boolean, mass?: number, gravity?: number, friction?: number, bounce?: number} = {}) {
         super();
         this.speed = speed;
         this.acceleration = acceleration;
+        this.isStatic = isStatic;
         this.mass = mass;
         this.friction = friction;
         this.bounce = bounce;
@@ -52,7 +54,7 @@ export class PhysicsComponent extends Component {
         let vRelativeVelocity = {x: this.speed.x - otherPC?.speed.x, y: this.speed.y - otherPC?.speed.y};
         let speed = vRelativeVelocity.x * vCollisionNorm.x + vRelativeVelocity.y * vCollisionNorm.y;
 
-        if (speed < 0) {
+        if (speed < 0 || this.isStatic) {
             return;
         }
 
@@ -63,6 +65,10 @@ export class PhysicsComponent extends Component {
     }
 
     checkEdgeCollisions(transform: Transform, {width, height}: {width: number, height: number}) {
+        if (this.isStatic) {
+            return;
+        }
+
         this.checkCircleEdgeCollisions(transform, {width, height});        
     }
 
