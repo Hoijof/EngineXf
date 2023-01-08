@@ -2,10 +2,12 @@ import { gk, sk } from '../consts';
 import {Engine, Mouse, PHASE} from '../types';
 import { Entity } from './Entity';
 import { Component } from './Component';
+import { checkCollisions } from './globalCollisions';
 
 let engine: Engine;
+let updateCallback = (engine: Engine) => {};
 
-export function init(canvas: HTMLCanvasElement) {
+export function init(canvas: HTMLCanvasElement, uc: (engine: Engine) => void) {
     engine = {
         lastFrameTime: 0,
         deltaTime: 0,
@@ -29,7 +31,7 @@ export function init(canvas: HTMLCanvasElement) {
             wheel: 0,
         },
         keyboard: {
-            keys: new Set(['w', 'a', 's', 'd', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight']),
+            keys: new Set(['w', 'a', 's', 'd', 'r', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', ' ', 'z']),
             down: new Set(),
             up: new Set(),
             pressed: new Set(),
@@ -40,6 +42,8 @@ export function init(canvas: HTMLCanvasElement) {
     resize(window.innerWidth, window.innerHeight);
 
     setListeners();
+
+    updateCallback = uc;
 }
 export function get() {
     return engine;
@@ -48,6 +52,7 @@ export function get() {
 export function step() {
     setup();
     update();
+    updateCallback(engine);
     physicsUpdate();
     draw();
     cleanup();
@@ -76,7 +81,7 @@ export function update() {
     engine.entities.forEach(entity => {
         if (entity.active) {
             entity.components.forEach((component: Component) => {
-                if (component.active && component.phase === PHASE.UPDATE) {
+                if (component.isActive && component.phase === PHASE.UPDATE) {
                     component.update(entity.transform, engine);
                 }
             });
@@ -85,7 +90,9 @@ export function update() {
 }
 
 export function physicsUpdate() {
+    const entities = Array.from(engine.entities);
 
+    checkCollisions(entities, engine.width, engine.height);
 }
 
 export function cleanup() {
@@ -99,30 +106,31 @@ export function cleanup() {
 }
 
 export function draw() {
-    const { deltaTime, width, height, mouse, keyboard } = engine;
+    const { canvas, ctx, fps, width, height, mouse, keyboard } = engine;
 
-    engine.ctx.clearRect(0, 0, width, height);
+    ctx.clearRect(0, 0, width, height);
     
     // Draw fps counter
-    engine.ctx.fillStyle = 'white';
-    engine.ctx.font = '20px Arial';
-    engine.ctx.fillText(engine.fps.toString(), 10, 30);
+    ctx.fillStyle = 'white';
+    ctx.font = '20px Arial';
+    ctx.fillText(fps.toString(), 10, 30);
 
     // Draw mouse position
     if (gk('DEBUG')) {
-        engine.ctx.fillText(`x: ${mouse.x} y: ${mouse.y} down: ${mouse.down} up: ${mouse.up} pressed: ${mouse.pressed} released: ${mouse.released} wheel: ${mouse.wheel}`, 10, 60);
+        // ctx.strokeRect(0, 0, canvas.width, canvas.height);
+        ctx.fillText(`x: ${mouse.x} y: ${mouse.y} down: ${mouse.down} up: ${mouse.up} pressed: ${mouse.pressed} released: ${mouse.released} wheel: ${mouse.wheel}`, 10, 60);
 
-        engine.ctx.fillText(`Down: ${Array.from(keyboard.down).join(' ')}`, 10, 90);
-        engine.ctx.fillText(`Up: ${Array.from(keyboard.up).join(' ')}`, 10, 120);
+        ctx.fillText(`Down: ${Array.from(keyboard.down).join(' ')}`, 10, 90);
+        ctx.fillText(`Up: ${Array.from(keyboard.up).join(' ')}`, 10, 120);
 
-        engine.ctx.fillText(`width: ${width} height: ${height}`, 100, 30);       
+        ctx.fillText(`width: ${width} height: ${height}`, 100, 30);       
     }
 
     // Draw Entities
     engine.entities.forEach(entity => {
         if (entity.active) {
             entity.components.forEach((component: Component) => {
-                if (component.active && component.phase === PHASE.DRAW) {
+                if (component.isActive && component.phase === PHASE.DRAW) {
                     component.update(entity.transform, engine);
                 }
             });
@@ -130,9 +138,6 @@ export function draw() {
     });
 
 }
-
-
-
 
 export function resize(width: number, height: number) {
     engine.width = width;
@@ -174,11 +179,15 @@ export function addEntity(entity : Entity) {
     engine.entities.add(entity);
 }
 
+export function clearEntities() {
+    engine.entities.clear();
+}
+
 
 // #region Event Listeners
 function setListeners() {
     document.addEventListener('keyup', ({ key }) => {
-        if (key === '`') {
+        if (key === '`' || key === 'z') {
             sk('DEBUG', !gk('DEBUG'));
         }
     });

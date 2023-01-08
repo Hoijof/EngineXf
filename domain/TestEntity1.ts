@@ -12,13 +12,11 @@ export class TestEntity1 extends Entity {
             ...transform
         } });
 
-        this.components.push(new PhysicsComponent({
+        this.addComponent(new PhysicsComponent({
             speed: new DOMPoint(10, 10),
             ...physicsComponent
-        } )); 
+        }, this.componentMethods)); 
 
-        this.components.push(new RenderComponent({ color: "red"}));
+        this.addComponent(new RenderComponent({ color: "random", shape: "circle"}, this.componentMethods));
     }
-
-
 }

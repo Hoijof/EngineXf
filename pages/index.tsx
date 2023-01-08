@@ -1,9 +1,10 @@
 import Head from 'next/head'
 
 import { useEffect, useRef } from 'react'
+import { gk } from '../consts';
 
-import {init, step, resize, mouseUpdate, addKeyUp, addKeyDown, addEntity} from '../engine/index';
-import { Engine } from '../types';
+import {init, step, resize, mouseUpdate, addKeyUp, addKeyDown, addEntity, clearEntities} from '../engine/index';
+import { getRandomFloat } from '../utils';
 import { TestEntity1 } from './../domain/TestEntity1';
 
 let singletoned = false;
@@ -25,11 +26,9 @@ export default function Home() {
     }
 
     // #region Setup events
-    document.addEventListener('resize', () => {
-      const canvas = canvasRef.current as unknown as HTMLCanvasElement;
-
-      resize(canvas.width, canvas.height);
-    });
+    window.onresize = () => {
+      resize(window.innerWidth, window.innerHeight);
+    };
 
     document.addEventListener('mousemove', (e) => {
       const canvas = canvasRef.current as unknown as HTMLCanvasElement;
@@ -61,28 +60,50 @@ export default function Home() {
     });
 
     document.addEventListener('keydown', (e) => {
+      if (gk('DEBUG')) {
+        console.log(e.key);
+      }
+      
       addKeyDown(e.key);
     });
 
     // #endregion
     // Setup engine
 
-    init(canvasRef.current as unknown as HTMLCanvasElement);
+    init(canvasRef.current as unknown as HTMLCanvasElement, (engine) => {
+
+      if (engine.keyboard.pressed.has(' ')) {
+        console.log('space pressed');
+
+        addRandomEntity();
+      }
+
+      if (engine.keyboard.pressed.has('ArrowDown')) {
+        addRandomEntityTimes(20)();
+      }
+
+      if (engine.keyboard.pressed.has('r')) {
+        clearEntities();
+      }
+    });
 
     render();
     // setup game?
 
 
-    addEntity(new TestEntity1({ name: 'Manolo'}));
+    addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 200)}, physicsComponent: {speed: new DOMPoint(-50, 0)}}));
+    addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(120, 300), scale: new DOMPoint(200, 200)}, physicsComponent: {speed: new DOMPoint(50, 0)}}));
   });
 
   const addRandomEntity = () => {
-    const x = Math.random() * 1000;
-    const y = Math.random() * 1000;
+    const x = Math.random() * window.innerWidth;
+    const y = Math.random() * window.innerHeight;
 
     const position = new DOMPoint(x, y);
     const speed = new DOMPoint(getRandomFloat(-50, 50), getRandomFloat(-50, 50));
-    addEntity(new TestEntity1({name: 'manolo', transform: {position}, physicsComponent: {speed}}));
+    const scale = new DOMPoint(getRandomFloat(8, 25), getRandomFloat(8, 25));
+
+    addEntity(new TestEntity1({name: 'manolo', transform: {position, scale}, physicsComponent: {speed}}));
   }
 
   const addRandomEntityTimes = (times: number) => {
@@ -101,9 +122,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main >
-        <div >
-          <canvas id='mainCanvas' ref={canvasRef} />
-        </div>
+        <canvas id='mainCanvas' ref={canvasRef} style={{border: '1px solid blue'}} />
         <div style={{position: "fixed", top: 0, left: 0, zIndex: 1000}}>
           <button onClick={addRandomEntity}>Add entity</button>
           <button onClick={addRandomEntityTimes(10)}>Add entity x10</button>
@@ -116,7 +135,4 @@ export default function Home() {
 }
 
 
-// Get random float between min and max
-export const getRandomFloat = (min: number, max: number) => {
-  return Math.random() * (max - min) + min;
-}
+
