@@ -3,7 +3,7 @@ import { Entity } from "./Entity";
 export function checkCollisions(entities: Entity[], width: number, height: number) {
     for (let i = 0; i < entities.length; i++) {
         // Check for edge collisions
-        entities[i].componentMethods.checkEdgeCollisions(entities[i].transform, width, height);
+        entities[i].componentMethods.checkEdgeCollisions(entities[i].transform, {width, height});
 
         for (let j = i + 1; j < entities.length; j++) {
             if (isIntersecting(entities[i], entities[j])) {                

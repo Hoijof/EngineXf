@@ -15,8 +15,8 @@ export class TestEntity1 extends Entity {
         this.addComponent(new PhysicsComponent({
             speed: new DOMPoint(10, 10),
             ...physicsComponent
-        }, this.componentMethods)); 
+        })); 
 
-        this.addComponent(new RenderComponent({ color: "random", shape: "circle"}, this.componentMethods));
+        this.addComponent(new RenderComponent({ color: "random", shape: "circle"}));
     }
 }

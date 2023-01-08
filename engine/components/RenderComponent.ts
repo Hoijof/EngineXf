@@ -1,3 +1,4 @@
+import { gk } from "../../consts";
 import { Engine, PHASE } from "../../types";
 import { getRandomInt } from "../../utils";
 import { Component } from "../Component";
@@ -10,7 +11,7 @@ export class RenderComponent extends Component {
     phase = PHASE.DRAW;
     color = 'white';
 
-    constructor({shape = "circle", color = "random"} : {shape?: "circle" | "rect", color?: string} = {}, componentMethods: any) {
+    constructor({shape = "circle", color = "random"} : {shape?: "circle" | "rect", color?: string} = {}) {
         super();
         this.shape = shape;
 
@@ -19,9 +20,6 @@ export class RenderComponent extends Component {
         } else {
             this.color = color;
         }
-
-        componentMethods.getRenderShape = () => this.shape;
-        componentMethods.getRenderColor = () => this.color;
     }
 
     update(transform : Transform, engine: Engine) : Transform{
@@ -46,10 +44,30 @@ export class RenderComponent extends Component {
                 ctx.strokeRect(-transform.scale.x / 2, -transform.scale.y / 2, transform.scale.x, transform.scale.y);
             }
 
+            if (gk('DEBUG')) {
+                ctx.fillStyle = 'black';
+                ctx.strokeStyle = 'yellow';
+
+                ctx.beginPath();
+                ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, -transform.scale.x);
+                ctx.stroke();
+            }
+
             ctx.restore();
         }
         
         return transform;
+    }
+
+    addListeners(componentMethods?: any): void {
+        componentMethods.getRenderShape = () => this.shape;
+        componentMethods.getRenderColor = () => this.color;
     }
 
 }

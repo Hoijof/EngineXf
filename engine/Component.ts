@@ -16,4 +16,8 @@ export class Component {
     onCollision(other: Entity, transform: Transform) {
         // console.log("onCollision", this, other);
     }
+
+    addListeners(componentMethods: any = {}) {
+        
+    }
 }

@@ -15,6 +15,12 @@ export interface Engine {
     height: number;
     mouse: Mouse;
     keyboard: Keyboard;
+    touch: Touch;
+}
+
+export interface Touch {
+    ongoingTouches: any[];
+    endedTouches: any[];
 }
 
 export interface Mouse {

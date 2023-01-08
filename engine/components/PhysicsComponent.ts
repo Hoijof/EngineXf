@@ -12,17 +12,13 @@ export class PhysicsComponent extends Component {
     friction = 0;
     bounce = 1;
 
-    constructor({speed = new DOMPoint(0, 0), acceleration = new DOMPoint(0, 0), mass = 1, gravity = 0, friction = 0, bounce = 1} : {speed?: DOMPoint, acceleration?: DOMPoint, mass?: number, gravity?: number, friction?: number, bounce?: number} = {}, componentMethods?: any) {
+    constructor({speed = new DOMPoint(0, 0), acceleration = new DOMPoint(0, 0), mass = 1, gravity = 0, friction = 0, bounce = 1} : {speed?: DOMPoint, acceleration?: DOMPoint, mass?: number, gravity?: number, friction?: number, bounce?: number} = {}) {
         super();
         this.speed = speed;
         this.acceleration = acceleration;
         this.mass = mass;
         this.friction = friction;
         this.bounce = bounce;
-
-        if (componentMethods) {
-            componentMethods.checkEdgeCollisions = this.checkEdgeCollisions.bind(this);
-        }
     }
     
     update(transform : Transform, {delta}: Engine) : Transform{
@@ -82,13 +78,19 @@ export class PhysicsComponent extends Component {
             transform.position.x = 0 + scaleX;
         }
 
-        if (y + scaleY > height) {
+        if (y + scaleX > height) {
             this.speed.y *= -this.bounce;
-            transform.position.y = height - scaleY;
+            transform.position.y = height - scaleX;
         }
-        else if (y - scaleY < 0) {
+        else if (y - scaleX < 0) {
             this.speed.y *= -this.bounce;
-            transform.position.y = 0 + scaleY;
+            transform.position.y = 0 + scaleX;
+        }
+    }
+
+    addListeners(componentMethods?: any): void {
+        if (componentMethods) {
+            componentMethods.checkEdgeCollisions = this.checkEdgeCollisions.bind(this);
         }
     }
 }

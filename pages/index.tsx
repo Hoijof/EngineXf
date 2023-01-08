@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { gk } from '../consts';
 
 import {init, step, resize, mouseUpdate, addKeyUp, addKeyDown, addEntity, clearEntities} from '../engine/index';
+import { Transform } from '../engine/Transform';
 import { getRandomFloat } from '../utils';
 import { TestEntity1 } from './../domain/TestEntity1';
 
@@ -24,11 +25,6 @@ export default function Home() {
 
       requestAnimationFrame(render);
     }
-
-    // #region Setup events
-    window.onresize = () => {
-      resize(window.innerWidth, window.innerHeight);
-    };
 
     document.addEventListener('mousemove', (e) => {
       const canvas = canvasRef.current as unknown as HTMLCanvasElement;
@@ -85,17 +81,29 @@ export default function Home() {
       if (engine.keyboard.pressed.has('r')) {
         clearEntities();
       }
+
+      if (engine.mouse.pressed) {
+        addRandomEntity({position: new DOMPoint(engine.mouse.x, engine.mouse.y)});
+      }
+
+      const { endedTouches } = engine.touch;
+
+      if (endedTouches.length) {
+        for (const touch of endedTouches) {
+          addRandomEntity({position: new DOMPoint(touch.x, touch.y)});
+        }
+      }
     });
 
     render();
     // setup game?
 
 
-    addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 200)}, physicsComponent: {speed: new DOMPoint(-50, 0)}}));
-    addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(120, 300), scale: new DOMPoint(200, 200)}, physicsComponent: {speed: new DOMPoint(50, 0)}}));
+    // addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 200)}, physicsComponent: {speed: new DOMPoint(-50, 0)}}));
+    // addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(120, 300), scale: new DOMPoint(200, 200)}, physicsComponent: {speed: new DOMPoint(50, 0)}}));
   });
 
-  const addRandomEntity = () => {
+  const addRandomEntity = (transform: Partial<Transform> | any = {}) => {
     const x = Math.random() * window.innerWidth;
     const y = Math.random() * window.innerHeight;
 
@@ -103,7 +111,7 @@ export default function Home() {
     const speed = new DOMPoint(getRandomFloat(-50, 50), getRandomFloat(-50, 50));
     const scale = new DOMPoint(getRandomFloat(8, 25), getRandomFloat(8, 25));
 
-    addEntity(new TestEntity1({name: 'manolo', transform: {position, scale}, physicsComponent: {speed}}));
+    addEntity(new TestEntity1({name: 'manolo', transform: {position, scale, ...transform}, physicsComponent: {speed}}));
   }
 
   const addRandomEntityTimes = (times: number) => {
@@ -122,7 +130,7 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main >
-        <canvas id='mainCanvas' ref={canvasRef} style={{border: '1px solid blue'}} />
+        <canvas id='canvas' ref={canvasRef} />
         <div style={{position: "fixed", top: 0, left: 0, zIndex: 1000}}>
           <button onClick={addRandomEntity}>Add entity</button>
           <button onClick={addRandomEntityTimes(10)}>Add entity x10</button>

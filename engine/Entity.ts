@@ -36,6 +36,8 @@ export class Entity {
 
     addComponent(component: Component) {
         this.components.push(component);
+
+        component.addListeners(this.componentMethods);
     }
 
     removeComponent(component: Component) {
