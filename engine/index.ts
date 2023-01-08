@@ -202,74 +202,42 @@ export function addKeyUp(key: string) {
 
 // #region Touch
 function handleStart(evt: TouchEvent) {
-    const { ctx } = engine;
-
     evt.preventDefault();
-    console.log('touchstart.');
-    const el = document.getElementById('canvas');
     const touches = evt.changedTouches;
 
     for (let i = 0; i < touches.length; i++) {
-        console.log(`touchstart: ${i}.`);
         engine.touch.ongoingTouches.push(copyTouch(touches[i]));
-        const color = colorForTouch(touches[i]);
-        console.log(`color of touch with id ${touches[i].identifier} = ${color}`);
-        ctx.beginPath();
-        ctx.arc(touches[i].pageX, touches[i].pageY, 4, 0, 2 * Math.PI, false);  // a circle at the start
-        ctx.fillStyle = color;
-        ctx.fill();
     }
 }
 
 function handleMove(evt: TouchEvent) {
-    const { ctx, touch: { ongoingTouches } } = engine;
+    const { touch: { ongoingTouches } } = engine;
 
     evt.preventDefault();
-    const el = document.getElementById('canvas') as HTMLCanvasElement;
     const touches = evt.changedTouches;
 
     for (let i = 0; i < touches.length; i++) {
-        const color = colorForTouch(touches[i]);
         const idx = ongoingTouchIndexById(touches[i].identifier);
 
         if (idx >= 0) {
-            console.log(`continuing touch ${idx}`);
-            ctx.beginPath();
-            console.log(`ctx.moveTo( ${ongoingTouches[idx].x}, ${ongoingTouches[idx].y} );`);
-            ctx.moveTo(ongoingTouches[idx].x, ongoingTouches[idx].y);
-            console.log(`ctx.lineTo( ${touches[i].pageX}, ${touches[i].pageY} );`);
-            ctx.lineTo(touches[i].pageX, touches[i].pageY);
-            ctx.lineWidth = 4;
-            ctx.strokeStyle = color;
-            ctx.stroke();
-
             ongoingTouches.splice(idx, 1, copyTouch(touches[i]));  // swap in the new touch record
         } else {
-            console.log('can\'t figure out which touch to continue');
+            console.warn('can\'t figure out which touch to continue');
         }
     }
 }
 
 function handleEnd(evt: TouchEvent) {
-    const { ctx, touch: { ongoingTouches, endedTouches } } = engine;
+    const { touch: { ongoingTouches, endedTouches } } = engine;
 
     evt.preventDefault();
-    console.log("touchend");
-    const el = document.getElementById('canvas');
 
     const touches = evt.changedTouches;
 
     for (let i = 0; i < touches.length; i++) {
-        const color = colorForTouch(touches[i]);
         let idx = ongoingTouchIndexById(touches[i].identifier);
 
         if (idx >= 0) {
-            ctx.lineWidth = 4;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.moveTo(ongoingTouches[idx].x, ongoingTouches[idx].y);
-            ctx.lineTo(touches[i].pageX, touches[i].pageY);
-            ctx.fillRect(touches[i].pageX - 4, touches[i].pageY - 4, 8, 8);  // and a square at the end
             ongoingTouches.splice(idx, 1);  // remove it; we're done
             endedTouches.push(copyTouch(touches[i]));
         } else {
@@ -289,17 +257,6 @@ function handleCancel(evt: TouchEvent) {
     }
 }
 
-function colorForTouch(touch: Touch) {
-    let r: any = (touch.identifier + 5) % 16;
-    let g: any = Math.floor((touch.identifier + 6) / 3) % 16;
-    let b: any = Math.floor((touch.identifier + 4) / 7) % 16;
-    r = r.toString(16); // make it a hex digit
-    g = g.toString(16); // make it a hex digit
-    b = b.toString(16); // make it a hex digit
-    const color = `#${r}${g}${b}`;
-    return 'white';
-}
-
 function copyTouch({ identifier, pageX, pageY }: Touch) {
     return { identifier, x: pageX, y: pageY };
 }
@@ -314,7 +271,7 @@ function ongoingTouchIndexById(idToFind: number) {
             return i;
         }
     }
-    return -1;    // not found
+    return -1;
 }
 // #endregion
 
