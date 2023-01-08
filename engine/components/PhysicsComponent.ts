@@ -30,6 +30,10 @@ export class PhysicsComponent extends Component {
     }
 
     updateMovement(transform : Transform, delta: number) {
+        if (this.isStatic) {
+            return;
+        }
+
         this.speed.x += this.acceleration.x * delta;
         this.speed.y += this.acceleration.y * delta;
 
@@ -42,24 +46,25 @@ export class PhysicsComponent extends Component {
 
     onCollision(other: Entity, transform: Transform): void {
         const otherPC = other.getComponent(PhysicsComponent);
-;
+
         if (!otherPC) {
             return;
         }
 
-        let vCollision = {x: other.transform.position.x - transform.position.x, y: other.transform.position.y - transform.position.y};
-        let distance = Math.sqrt((other.transform.position.x-transform.position.x)*(other.transform.position.x-transform.position.x) + (other.transform.position.y-transform.position.y)*(other.transform.position.y-transform.position.y));
-        let vCollisionNorm = {x: vCollision.x / distance, y: vCollision.y / distance};
+        const vCollision = {x: other.transform.position.x - transform.position.x, y: other.transform.position.y - transform.position.y};
+        const distance = Math.sqrt((other.transform.position.x-transform.position.x)*(other.transform.position.x-transform.position.x) + (other.transform.position.y-transform.position.y)*(other.transform.position.y-transform.position.y));
+        const vCollisionNorm = {x: vCollision.x / distance, y: vCollision.y / distance};
 
-        let vRelativeVelocity = {x: this.speed.x - otherPC?.speed.x, y: this.speed.y - otherPC?.speed.y};
-        let speed = vRelativeVelocity.x * vCollisionNorm.x + vRelativeVelocity.y * vCollisionNorm.y;
+        const vRelativeVelocity = {x: this.speed.x - otherPC?.speed.x, y: this.speed.y - otherPC?.speed.y};
+        const speed = vRelativeVelocity.x * vCollisionNorm.x + vRelativeVelocity.y * vCollisionNorm.y;
 
-        if (speed < 0 || this.isStatic) {
+        if (speed < 0) {
             return;
         }
 
         this.speed.x -= (speed * vCollisionNorm.x);
         this.speed.y -= (speed * vCollisionNorm.y);
+
         otherPC.speed.x += (speed * vCollisionNorm.x);
         otherPC.speed.y += (speed * vCollisionNorm.y);
     }
@@ -73,7 +78,7 @@ export class PhysicsComponent extends Component {
     }
 
     checkCircleEdgeCollisions(transform: Transform, {width, height}: {width: number, height: number}) {
-        const {position: {x, y}, scale: {x: scaleX, y: scaleY}} = transform;
+        const {position: {x, y}, scale: {x: scaleX}} = transform;
 
         if (x + scaleX > width) {
             this.speed.x *= -this.bounce;
@@ -97,6 +102,7 @@ export class PhysicsComponent extends Component {
     addListeners(componentMethods?: any): void {
         if (componentMethods) {
             componentMethods.checkEdgeCollisions = this.checkEdgeCollisions.bind(this);
+            componentMethods.isStatic = this.isStatic;
         }
     }
 }

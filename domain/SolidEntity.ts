@@ -14,7 +14,7 @@ export class SolidEntity extends Entity {
 
         this.addComponent(new PhysicsComponent({isStatic: true}));
 
-        this.addComponent(new RenderComponent({ color: "random", shape: "circle"}));
+        this.addComponent(new RenderComponent({ color: "white", shape: "rect"}));
 
         this.addComponent(new InteractionComponent((other: Entity) => {
             console.log("SOLID ENTITY collided with", other);

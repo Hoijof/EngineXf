@@ -1,9 +1,13 @@
 import { Entity } from "./Entity";
 
-export function checkCollisions(entities: Entity[], width: number, height: number) {
-    for (let i = 0; i < entities.length; i++) {
+export function checkCollisions(staticEntities: Entity[], dynamicEntities: Entity[], width: number, height: number) {
+    const perf = performance.now();
+
+    const entities = [...dynamicEntities, ...staticEntities];
+
+    for (let i = 0; i < dynamicEntities.length; i++) {
         // Check for edge collisions
-        entities[i].componentMethods.checkEdgeCollisions(entities[i].transform, {width, height});
+        dynamicEntities[i].componentMethods.checkEdgeCollisions(dynamicEntities[i].transform, {width, height});
 
         for (let j = i + 1; j < entities.length; j++) {
             if (isIntersecting(entities[i], entities[j])) {                
@@ -12,6 +16,8 @@ export function checkCollisions(entities: Entity[], width: number, height: numbe
             }            
         }
     }
+
+    // console.log(`Collision check took ${performance.now() - perf}ms`);
 }
 
 function isIntersecting(entity1: Entity, entity2: Entity) {

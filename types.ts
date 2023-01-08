@@ -10,7 +10,9 @@ export interface Engine {
     fpsTime: number;
     canvas: HTMLCanvasElement;
     ctx: CanvasRenderingContext2D;
-    entities: Set<Entity>;
+    phantomEntities: Set<Entity>;
+    dynamicEntities: Set<Entity>;
+    staticEntities: Set<Entity>;
     width: number;
     height: number;
     mouse: Mouse;
@@ -31,6 +33,7 @@ export interface Mouse {
     pressed: boolean;
     released: boolean;
     wheel: number;
+    button: number;
 }
 
 export interface Keyboard {

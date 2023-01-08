@@ -40,8 +40,8 @@ export class RenderComponent extends Component {
                 ctx.fill();
                 ctx.stroke();
             } else if (this.shape === "rect") {
-                ctx.fillRect(-transform.scale.x / 2, -transform.scale.y / 2, transform.scale.x, transform.scale.y);
-                ctx.strokeRect(-transform.scale.x / 2, -transform.scale.y / 2, transform.scale.x, transform.scale.y);
+                ctx.fillRect(-transform.scale.x, -transform.scale.y, 2 * transform.scale.x, 2 * transform.scale.y);
+                ctx.strokeRect(-transform.scale.x, -transform.scale.y, 2 * transform.scale.x, 2 * transform.scale.y);
             }
 
             if (gk('DEBUG')) {
@@ -55,7 +55,10 @@ export class RenderComponent extends Component {
 
                 ctx.beginPath();
                 ctx.moveTo(0, 0);
-                ctx.lineTo(0, -transform.scale.x);
+                ctx.lineTo(transform.scale.x, 0);
+                
+                ctx.moveTo(0, 0);
+                ctx.lineTo(0, transform.scale.y);
                 ctx.stroke();
             }
 

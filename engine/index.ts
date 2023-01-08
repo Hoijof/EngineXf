@@ -3,6 +3,7 @@ import { Engine, Mouse, PHASE } from '../types';
 import { Entity } from './Entity';
 import { Component } from './Component';
 import { checkCollisions } from './globalCollisions';
+import { PhysicsComponent } from './components/PhysicsComponent';
 
 let engine: Engine;
 let updateCallback = (engine: Engine) => { };
@@ -16,7 +17,9 @@ export function init(canvas: HTMLCanvasElement, uc: (engine: Engine) => void) {
         fps: 0,
         fpsCounter: 0,
         fpsTime: 0,
-        entities: new Set<Entity>(),
+        phantomEntities: new Set<Entity>(),
+        staticEntities: new Set<Entity>(),
+        dynamicEntities: new Set<Entity>(),
         canvas: canvas,
         ctx: canvas.getContext('2d') as CanvasRenderingContext2D,
         width: 0,
@@ -29,6 +32,7 @@ export function init(canvas: HTMLCanvasElement, uc: (engine: Engine) => void) {
             pressed: false,
             released: false,
             wheel: 0,
+            button: -1,
         },
         keyboard: {
             keys: new Set(['w', 'a', 's', 'd', 'r', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', ' ', 'z']),
@@ -82,21 +86,16 @@ export function setup() {
 
 
 export function update() {
-    engine.entities.forEach(entity => {
-        if (entity.active) {
-            entity.components.forEach((component: Component) => {
-                if (component.isActive && component.phase === PHASE.UPDATE) {
-                    component.update(entity.transform, engine);
-                }
-            });
-        }
-    });
+    engine.phantomEntities.forEach(updateByPhase(PHASE.UPDATE));
+    engine.staticEntities.forEach(updateByPhase(PHASE.UPDATE));
+    engine.dynamicEntities.forEach(updateByPhase(PHASE.UPDATE));
 }
 
 export function physicsUpdate() {
-    const entities = Array.from(engine.entities);
+    const staticEntities = Array.from(engine.staticEntities);
+    const dynamicEntities = Array.from(engine.dynamicEntities);
 
-    checkCollisions(entities, engine.width, engine.height);
+    checkCollisions(staticEntities, dynamicEntities, engine.width, engine.height);
 }
 
 export function cleanup() {
@@ -117,15 +116,8 @@ export function draw() {
     ctx.clearRect(0, 0, width, height);
 
     // Draw Entities
-    engine.entities.forEach(entity => {
-        if (entity.active) {
-            entity.components.forEach((component: Component) => {
-                if (component.isActive && component.phase === PHASE.DRAW) {
-                    component.update(entity.transform, engine);
-                }
-            });
-        }
-    });
+    engine.staticEntities.forEach(updateByPhase(PHASE.DRAW));
+    engine.dynamicEntities.forEach(updateByPhase(PHASE.DRAW));
 
     // Draw fps counter
     ctx.fillStyle = 'white';
@@ -162,6 +154,18 @@ export function draw() {
     }
 
     ctx.fillText(fps.toString(), 10, 30);
+}
+
+function updateByPhase(phase: PHASE) {
+    return (entity: Entity) => {
+        if (entity.active) {
+            entity.components.forEach((component: Component) => {
+                if (component.isActive && component.phase === phase) {
+                    component.update(entity.transform, engine);
+                }
+            });
+        }
+    }
 }
 
 // #region Listeners
@@ -277,20 +281,71 @@ function ongoingTouchIndexById(idToFind: number) {
 // #endregion
 
 export function addEntity(entity: Entity) {
-    engine.entities.add(entity);
+    const { phantomEntities, dynamicEntities, staticEntities } = engine;
+
+    if (!entity.getComponent(PhysicsComponent)) {
+        phantomEntities.add(entity);
+        
+        return;
+    }
+    
+    if (entity.componentMethods.isStatic) {
+        staticEntities.add(entity);
+
+        return;
+    }
+
+    dynamicEntities.add(entity);
 }
 
 export function clearEntities() {
-    engine.entities.clear();
+    engine.phantomEntities.clear();
+    engine.dynamicEntities.clear();
+    engine.staticEntities.clear();
 }
 
 
 // #region Setup
 function setListeners() {
-    document.addEventListener('keyup', ({ key }) => {
-        if (key === '`' || key === 'z') {
+    document.addEventListener('mousemove', (e) => {
+        const canvas = engine.canvas;
+
+        const x = e.clientX - canvas.offsetLeft;
+        const y = e.clientY - canvas.offsetTop;
+
+        mouseUpdate({ x, y });
+    });
+
+    document.addEventListener('mousedown', (e) => {
+        mouseUpdate({down: true, up: false, pressed: true, button: e.button });
+
+        e.preventDefault();
+    });
+
+    document.addEventListener('mouseup', (e) => {
+        mouseUpdate({down: false, up: true, released: true });
+
+        e.preventDefault();
+    });
+
+    document.addEventListener('mousewheel', (e) => {
+        mouseUpdate({wheel: (e as any).deltaY });
+    });
+
+    document.addEventListener('keyup', (e) => {
+        addKeyUp(e.key);
+
+        if (e.key === '`' || e.key === 'z') {
             sk('DEBUG', !gk('DEBUG'));
         }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (gk('DEBUG')) {
+            console.log(e.key);
+        }
+        
+        addKeyDown(e.key);
     });
 
     // #region Setup events
@@ -305,6 +360,10 @@ function setListeners() {
     el.addEventListener('touchmove', handleMove);
 
     console.log('Touch Initialized.');
+
+    document.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+    });
 }
 
 // #endRegion

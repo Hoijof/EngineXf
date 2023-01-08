@@ -3,10 +3,11 @@ import Head from 'next/head'
 import { useEffect, useRef } from 'react'
 import { gk } from '../consts';
 
-import {init, step, resize, mouseUpdate, addKeyUp, addKeyDown, addEntity, clearEntities} from '../engine/index';
+import {init, step, addEntity, clearEntities} from '../engine/index';
 import { Transform } from '../engine/Transform';
 import { getRandomFloat } from '../utils';
 import { TestEntity1 } from './../domain/TestEntity1';
+import { SolidEntity } from './../domain/SolidEntity';
 
 let singletoned = false;
 
@@ -25,43 +26,6 @@ export default function Home() {
 
       requestAnimationFrame(render);
     }
-
-    document.addEventListener('mousemove', (e) => {
-      const canvas = canvasRef.current as unknown as HTMLCanvasElement;
-
-      const x = e.clientX - canvas.offsetLeft;
-      const y = e.clientY - canvas.offsetTop;
-
-      mouseUpdate({ x, y });
-    });
-
-    document.addEventListener('mousedown', (e) => {
-      mouseUpdate({down: true, up: false, pressed: true });
-
-      e.preventDefault();
-    });
-
-    document.addEventListener('mouseup', (e) => {
-      mouseUpdate({down: false, up: true, released: true });
-
-      e.preventDefault();
-    });
-
-    document.addEventListener('mousewheel', (e) => {
-      mouseUpdate({wheel: (e as any).deltaY });
-    });
-
-    document.addEventListener('keyup', (e) => {
-      addKeyUp(e.key);
-    });
-
-    document.addEventListener('keydown', (e) => {
-      if (gk('DEBUG')) {
-        console.log(e.key);
-      }
-      
-      addKeyDown(e.key);
-    });
 
     // #endregion
     // Setup engine
@@ -83,9 +47,15 @@ export default function Home() {
       }
 
       if (engine.mouse.pressed) {
-        addRandomEntity({position: new DOMPoint(engine.mouse.x, engine.mouse.y)});
+        switch(engine.mouse.button) {
+          case 0:
+            addRandomEntity({position: new DOMPoint(engine.mouse.x, engine.mouse.y)});
+            break;
+          case 1:
+            addEntity(new SolidEntity({ name: 'Manolo', transform: {position: new DOMPoint(engine.mouse.x, engine.mouse.y), scale: new DOMPoint(50, 50)}}));
+            break;
+        }
       }
-
       const { endedTouches } = engine.touch;
 
       if (endedTouches.length) {
@@ -98,7 +68,7 @@ export default function Home() {
     render();
     // setup game?
 
-
+    addEntity(new SolidEntity({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 100)}}));
     // addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 200)}, physicsComponent: {speed: new DOMPoint(-50, 0)}}));
     // addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(120, 300), scale: new DOMPoint(200, 200)}, physicsComponent: {speed: new DOMPoint(50, 0)}}));
   });
