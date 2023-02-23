@@ -1,3 +1,4 @@
+import { Engine } from "../types";
 import { Component } from "./Component";
 import { Transform } from "./Transform";
 
@@ -23,6 +24,10 @@ export class Entity {
         if (transform) {
             this.transform = new Transform(transform);
         }
+        
+    }
+
+    update(delta: number, engine: Engine) {
         
     }
 

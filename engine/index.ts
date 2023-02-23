@@ -35,7 +35,7 @@ export function init(canvas: HTMLCanvasElement, uc: (engine: Engine) => void) {
             button: -1,
         },
         keyboard: {
-            keys: new Set(['w', 'a', 's', 'd', 'r', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', ' ', 'z']),
+            keys: new Set(['w', 'a', 's', 'd', 'r', 'ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', ' ', 'z', 'Shift']),
             down: new Set(),
             up: new Set(),
             pressed: new Set(),
@@ -159,6 +159,8 @@ export function draw() {
 function updateByPhase(phase: PHASE) {
     return (entity: Entity) => {
         if (entity.active) {
+            entity.update(engine.delta, engine);
+
             entity.components.forEach((component: Component) => {
                 if (component.isActive && component.phase === phase) {
                     component.update(entity.transform, engine);
@@ -188,9 +190,12 @@ export function addKeyDown(key: string) {
     const { keyboard } = engine;
 
     if (keyboard.keys.has(key)) {
+        if (!keyboard.down.has(key)) {
+            keyboard.pressed.add(key);
+        }
+
         keyboard.down.add(key);
         keyboard.up.delete(key);
-        keyboard.pressed.add(key);
     }
 }
 
@@ -199,9 +204,12 @@ export function addKeyUp(key: string) {
     const { keyboard } = engine;
 
     if (keyboard.keys.has(key)) {
+        if (!keyboard.up.has(key)) {
+            keyboard.released.add(key);
+        }
+        
         keyboard.up.add(key);
         keyboard.down.delete(key);
-        keyboard.released.add(key);
     }
 }
 // #endregion

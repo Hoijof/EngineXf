@@ -1,12 +1,11 @@
 import Head from 'next/head'
 
 import { useEffect, useRef } from 'react'
-import { gk } from '../consts';
+import { PlayerEntity } from '../domain/PlayerEntity';
 
 import {init, step, addEntity, clearEntities} from '../engine/index';
 import { Transform } from '../engine/Transform';
 import { getRandomFloat } from '../utils';
-import { TestEntity1 } from './../domain/TestEntity1';
 import { SolidEntity } from './../domain/SolidEntity';
 
 let singletoned = false;
@@ -68,7 +67,8 @@ export default function Home() {
     render();
     // setup game?
 
-    addEntity(new SolidEntity({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 100)}}));
+    addEntity(new PlayerEntity());
+    // addEntity(new SolidEntity({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 100)}}));
     // addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(150, 300), scale: new DOMPoint(100, 200)}, physicsComponent: {speed: new DOMPoint(-50, 0)}}));
     // addEntity(new TestEntity1({ name: 'Manolo', transform: {position: new DOMPoint(120, 300), scale: new DOMPoint(200, 200)}, physicsComponent: {speed: new DOMPoint(50, 0)}}));
   });
@@ -81,7 +81,7 @@ export default function Home() {
     const speed = new DOMPoint(getRandomFloat(-50, 50), getRandomFloat(-50, 50));
     const scale = new DOMPoint(getRandomFloat(8, 25), getRandomFloat(8, 25));
 
-    addEntity(new TestEntity1({name: 'manolo', transform: {position, scale, ...transform}, physicsComponent: {speed}}));
+    addEntity(new SolidEntity({name: 'manolo', transform: {position, scale, ...transform}}));
   }
 
   const addRandomEntityTimes = (times: number) => {

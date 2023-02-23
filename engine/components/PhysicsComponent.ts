@@ -1,3 +1,4 @@
+import { gk } from "../../consts";
 import { Engine } from "../../types";
 import { Component } from "../Component";
 import { Entity } from "../Entity";
@@ -7,15 +8,19 @@ export class PhysicsComponent extends Component {
     name="PhysicsComponent";
 
     speed = new DOMPoint(0, 0);
+    maxSpeed = 0;
     acceleration = new DOMPoint(0, 0);
     isStatic = false;
     mass = 1;
     friction = 0;
     bounce = 1;
 
-    constructor({speed = new DOMPoint(0, 0), acceleration = new DOMPoint(0, 0), isStatic=false, mass = 1, gravity = 0, friction = 0, bounce = 1} : {speed?: DOMPoint, acceleration?: DOMPoint, isStatic?: boolean, mass?: number, gravity?: number, friction?: number, bounce?: number} = {}) {
+    deltaP = 0;
+
+    constructor({speed = new DOMPoint(0, 0), maxSpeed= 0, acceleration = new DOMPoint(0, 0), isStatic=false, mass = 1, gravity = 0, friction = 0, bounce = 1} : {speed?: DOMPoint, maxSpeed?: number, acceleration?: DOMPoint, isStatic?: boolean, mass?: number, gravity?: number, friction?: number, bounce?: number} = {}) {
         super();
         this.speed = speed;
+        this.maxSpeed = maxSpeed;
         this.acceleration = acceleration;
         this.isStatic = isStatic;
         this.mass = mass;
@@ -37,12 +42,36 @@ export class PhysicsComponent extends Component {
         this.speed.x += this.acceleration.x * delta;
         this.speed.y += this.acceleration.y * delta;
 
-        this.speed.x *= 1 - this.friction * delta;
-        this.speed.y *= 1 - this.friction * delta;
+        this.applyFriction();
+
+        if (this.maxSpeed > 0) {
+            const speed = Math.sqrt(this.speed.x * this.speed.x + this.speed.y * this.speed.y);
+            if (speed > this.maxSpeed) {
+                this.speed.x *= this.maxSpeed / speed;
+                this.speed.y *= this.maxSpeed / speed;
+            }
+        }
+
+        // check if the speed is too low to be considered
+        if (Math.abs(this.speed.x) < 10) {
+            this.speed.x = 0;
+        }
+        if (Math.abs(this.speed.y) < 10) {
+            this.speed.y = 0;
+        }
 
         transform.position.x += this.speed.x * delta;
         transform.position.y += this.speed.y * delta;
     }
+
+    applyFriction() {
+        let vx = this.speed.x * this.friction; 
+        let vy = this.speed.y * this.friction; 
+
+        this.speed.x -= vx; 
+        this.speed.y -= vy; 
+  } 
+  
 
     onCollision(other: Entity, transform: Transform): void {
         const otherPC = other.getComponent(PhysicsComponent);
@@ -99,10 +128,29 @@ export class PhysicsComponent extends Component {
         }
     }
 
+    setSpeed(speed: DOMPoint) {
+        this.speed = speed;
+    }
+
+    addSpeed(speed: DOMPoint) {
+        this.speed.x += speed.x;
+        this.speed.y += speed.y;
+    }
+
+    setAcceleration(acceleration: DOMPoint) {
+        this.acceleration = acceleration;
+    }
+
     addListeners(componentMethods?: any): void {
         if (componentMethods) {
             componentMethods.checkEdgeCollisions = this.checkEdgeCollisions.bind(this);
             componentMethods.isStatic = this.isStatic;
+            componentMethods.setSpeed = this.setSpeed.bind(this);
+            componentMethods.addSpeed = this.addSpeed.bind(this);
+            componentMethods.getSpeed = () => this.speed;
+            componentMethods.setAcceleration = this.setAcceleration.bind(this);
+            componentMethods.getAcceleration = () => this.acceleration;
+            componentMethods.setMaxSpeed = (maxSpeed: number) => this.maxSpeed = maxSpeed;
         }
     }
 }
